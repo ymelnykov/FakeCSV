@@ -1,0 +1,89 @@
+{% extends 'generator/layout.html' %}
+
+{% block title %}
+Data sets
+{% endblock %}
+
+{% block main %}
+
+<!--Action Message, if any-->
+{% if message %}
+<div id="actMessage" style="display: none">
+  {{ message }}
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between">
+    <div>
+        <h2>{{ schema.name }}</h2>
+    </div>
+    <div>
+        <a class="btn btn-primary" href="/update_schema?schema_id={{ schema.id }}" role="button">Edit schema</a>
+    </div>
+</div>
+
+<!--Data Schema Section-->
+<div class="row mb-2">
+    <div class="col-1 p-2 fw-bolder">#</div>
+    <div class="col-3 p-2 fw-bolder">Column name</div>
+    <div class="col-3 p-2 fw-bolder">Column type</div>
+    <div class="col-auto"></div>
+</div>
+{% for column in columns %}
+<div class="row">
+    <div class="row mb-2">
+        <div class="col-1">{{ column.order }}</div>
+        <div class="col-3">{{ column.name }}</div>
+        <div class="col-3">{{ column.get_type_display }}</div>
+        <div class="col-auto"></div>
+    </div>
+    </div>
+{% endfor %}
+<!--End of Data Schema Section-->
+
+<div class="d-flex justify-content-between mt-3">
+    <div>
+        <h2>Data sets</h2>
+    </div>
+    <div>
+        <div class="row">
+            <div class="col-auto">
+                <label class="form-label" for="id_rows">Rows:</label>
+            </div>
+            <div class="col-auto">
+                <input class="form-control" type="number" min="0" id="id_rows" required>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-success" type="submit" onclick="createDataSet('{{schema.id}}')">Generate data</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Data Sets Section-->
+<div class="row mb-2">
+    <div class="col-1 p-2 fw-bolder">#</div>
+    <div class="col-3 p-2 fw-bolder">Created</div>
+    <div class="col-3 p-2 fw-bolder">Status</div>
+    <div class="col-auto p-2 fw-bolder">Actions</div>
+</div>
+<div id="datasets">
+    <div class="row mb-2 d-none" id="dataset1">
+        <div class="col-1 dataset-tag" id="number1"></div>
+        <div class="col-3 dataset-tag" id="created1"></div>
+        <div class="col-3 dataset-tag" id="badge_processing1"><span class="badge bg-secondary">Processing</span></div>
+        <div class="col-3 dataset-tag d-none" id="badge_ready1"><span class="badge bg-success">Ready</span></div>
+        <div class="col-auto dataset-tag" id="link1"></div>
+    </div>
+    {% for dataset in datasets %}
+    <div class="row mb-2" id="dataset{{dataset.0}}">
+        <div class="col-1 dataset-tag" id="number{{dataset.0}}">{{ dataset.0 }}</div>
+        <div class="col-3 dataset-tag" id="created{{dataset.0}}">{{ dataset.1.created|date:"Y-m-d H:i:s" }}</div>
+        <div class="col-3 dataset-tag" id="badge_ready{{dataset.0}}"><span class="badge bg-success">Ready</span></div>
+        <div class="col-auto dataset-tag" id="link{{dataset.0}}"><a href="{{ dataset.1.get_file_url }}">Download</a></div>
+    </div>
+    {% endfor %}
+</div>
+<!--End of Data Sets Section-->
+
+
+{% endblock %}

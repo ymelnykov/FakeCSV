@@ -1,0 +1,56 @@
+{% extends 'generator/layout.html' %}
+
+{% block title %}
+Schemas
+{% endblock %}
+
+{% block main %}
+
+<!--Action Message, if any-->
+{% if message %}
+<div id="actMessage" style="display: none">
+  {{ message }}
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between">
+    <div>
+        <h2>Data schemas</h2>
+    </div>
+    <div>
+        <a class="btn btn-success" href="{% url 'create_schema' %}" role="button">New schema</a>
+    </div>
+</div>
+
+<!--Data Schemas Section-->
+<div class="row mb-2">
+    <div class="col-1 p-2 fw-bolder">#</div>
+    <div class="col-3 p-2 fw-bolder">Title</div>
+    <div class="col-3 p-2 fw-bolder">Modified</div>
+    <div class="col-auto p-2 fw-bolder">Actions</div>
+</div>
+{% if schemas %}
+{% for schema in schemas %}
+<div class="row mb-2">
+    <div class="col-1">{{ schema.0 }}</div>
+    <div class="col-3"><a href="/create_dataset?schema_id={{ schema.1.id }}"> {{ schema.1.name }}</a></div>
+    <div class="col-3">{{ schema.1.modified|date:"Y-m-d H:i:s" }}</div>
+    <div class="col-auto">
+        <a class="btn btn-success btn-sm" href="/create_dataset?schema_id={{ schema.1.id }}" role="button">New data set</a>
+    </div>
+    <div class="col-auto">
+        <a class="btn btn-primary btn-sm" href="/update_schema?schema_id={{ schema.1.id }}" role="button">Edit schema</a>
+    </div>
+    <div class="col-auto">
+        <form action="{% url 'delete_schema' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="schema_id" value="{{ schema.1.id }}">
+            <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+<!--End of Data Schemas Section-->
+
+{% endblock %}

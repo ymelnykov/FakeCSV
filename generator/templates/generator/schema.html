@@ -1,0 +1,142 @@
+{% extends 'generator/layout.html' %}
+{% load static %}
+
+{% block script %}
+<script src="{% static 'generator/prePopulateSelects.js' %}"></script>
+{% endblock %}
+
+{% block title %}
+New schema
+{% endblock %}
+
+{% block main %}
+<!--Schema form-->
+{% if schema %}
+<form action="{% url 'update_schema' %}" method="post">
+{% else %}
+<form action="{% url 'create_schema' %}" method="post">
+{% endif %}
+    {% csrf_token %}
+    <div class="d-flex justify-content-between">
+        <div>
+            <h2>New schema</h2>
+        </div>
+        <div>
+            <button class="btn btn-success" type="submit">Submit</a>
+        </div>
+    </div>
+    <!--Schema data-->
+    <input type="hidden" name="schema_id" value="{{schema.id}}">
+    <div class="row">
+        <div class="col-6">
+            <label class="form-label" for="id_schema_name">Name:</label>
+        </div>
+        <div class="col-6"></div>
+    </div>
+    <div class="row mb-2">
+        <div class="col-6">
+            <input class="form-control" type="text" name="schema_name" maxlength="128" required id="id_schema_name" value="{{ schema.name }}">
+        </div>
+        <div class="col-6"></div>
+    </div>
+    <div class="row">
+        <div class="col-6">
+            <label class="form-label" for="id_schema_delimiter">Column separator:</label>
+        </div>
+        <div class="col-6"></div>
+    </div>
+    <div class="row mb-2">
+        <div class="col-6">
+            <select class="form-select" name="schema_delimiter" id="id_schema_delimiter" data-value="{{ schema.delimiter }}">
+                <option value="," selected>Comma (,)</option>
+                <option value=";">Semicolon (;)</option>
+                <option value=" ">Space ( )</option>
+                <option value="|">Pipe (|)</option>
+            </select>
+        </div>
+        <div class="col-6"></div>
+    </div>
+    <div class="row">
+        <div class="col-6">
+            <label class="form-label" for="id_schema_character">String character:</label>
+        </div>
+        <div class="col-6"></div>
+    </div>
+    <div class="row mb-5">
+        <div class="col-6">
+            <select class="form-select" name="schema_character" id="id_schema_character" data-value="{{ schema.character }}">
+                <option value="&#x27;">Single-quote (&#x27;)</option>
+                <option value="&quot;" selected>Double-quote (&quot;)</option>
+            </select>
+        </div>
+        <div class="col-6"></div>
+    </div>
+    <!--End of Schema data-->
+    <!--Columns data-->
+    <h2>Schema columns</h2>
+    <div id="columns">
+        {% for column in columns %}
+        <div class="mb-2" id="column{{column.0}}">
+            <!--Field labels-->
+            <div class="row">
+                <div class="col-3">
+                    <label class="form-label" for="id_name">Column name:</label>
+                </div>
+                <div class="col-3">
+                    <label class="form-label" for="id_type">Type:</label>
+                </div>
+                <div class="col-1 invisible range-tag">
+                    <label class="form-label" for="id_start">From:</label>
+                </div>
+                <div class="col-1 invisible range-tag">
+                    <label class="form-label" for="id_end">To:</label>
+                </div>
+                <div class="col-3">
+                    <label class="form-label" for="id_order">Order:</label>
+                </div>
+                <div class="col-1">
+                </div>
+            </div>
+            <!--End of Field labels-->
+            <!--Fields-->
+            <div class="row">
+                <div class="col-3">
+                    <input class="form-control me-2 column-tag" type="text" name="name" maxlength="128" required id="id_name" value="{{column.1.name}}">
+                </div>
+                <div class="col-3">
+                    <select class="form-select me-2 column-tag" name="type" onchange="showHideRangeLimits('{{column.0}}')" required id="id_type" data-value="{{column.1.type}}" data-column="{{column.0}}">
+                        <option value="" selected>---------</option>
+                        <option value="name">Full name</option>
+                        <option value="job">Job</option>
+                        <option value="email">Email</option>
+                        <option value="domain_name">Domain name</option>
+                        <option value="phone_number">Phone number</option>
+                        <option value="company">Company name</option>
+                        <option value="paragraph">Text</option>
+                        <option value="pyint">Integer</option>
+                        <option value="address">Address</option>
+                        <option value="date">Date</option>
+                    </select>
+                </div>
+                <div class="col-1 invisible range-tag">
+                    <input class="form-control me-2" type="number" name="start" id="id_start" value="{{column.1.start}}">
+                </div>
+                <div class="col-1 invisible range-tag">
+                    <input class="form-control me-2" type="number" name="end" id="id_end" value="{{column.1.end}}">
+                </div>
+                <div class="col-3">
+                    <input class="form-control me-2 column-tag order-tag" type="number" name="order" min="0" required id="id_order" value="{{column.1.order}}">
+                </div>
+                <!--End of Fields-->
+                <div class="col-1">
+                    <button class="btn btn-danger btn-sm" type="button" id="delete" onclick="removeColumn('{{column.0}}')">Delete</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <!--End of Columms data-->
+</form>
+<button class="btn btn-primary mt-3" onclick="addColumn()" id="add">Add column</button>
+
+{% endblock %}
