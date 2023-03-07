@@ -1,4 +1,10 @@
+import csv
+import json
+import os
 from datetime import datetime
+
+from faker import Faker
+
 from django.contrib.auth import authenticate, login, logout
 from django.core.files import File
 from django.db import IntegrityError
@@ -7,10 +13,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from .models import User, Schema, Column, DataSet
-from faker import Faker
-import csv
-import json
-import os
+
 
 fake = Faker()
 
@@ -29,7 +32,7 @@ def login_view(request):
         else:
             return render(request, 'generator/login.html', {
                 'message': 'Invalid username and/or password.',
-                'username': username
+                'username': username,
             })
     else:
         return render(request, 'generator/login.html')
@@ -47,14 +50,19 @@ def register(request):
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         email = request.POST.get('email')
-        new_user = dict(username=username, first_name=first_name, last_name=last_name, email=email)
+        new_user = dict(
+            username=username, 
+            first_name=first_name, 
+            last_name=last_name, 
+            email=email,
+            )
         # Ensure password matches confirmation
         password = request.POST.get('password')
         confirmation = request.POST.get('confirmation')
         if password != confirmation:
             return render(request, 'generator/register.html', {
                 'user': new_user,
-                'message': 'Passwords must match.'
+                'message': 'Passwords must match.',
             })
         # Attempt to create new user
         try:
@@ -66,20 +74,22 @@ def register(request):
         except IntegrityError:
                 return render(request, 'generator/register.html', {
                 'user': new_user,
-                'message': 'Username already taken.'
+                'message': 'Username already taken.',
             })
         login(request, user)
         return HttpResponseRedirect(reverse('index'))
     else:
         return render(request, 'generator/register.html')
 
+
 def index(request):
     # If user is authenticate, show data schemas, else login
     if request.user.is_authenticated:
-        queryset = Schema.objects.filter(owner=request.user).order_by('modified')
+        queryset = Schema.objects.filter(
+                owner=request.user).order_by('modified')
         schemas = list(enumerate(list(queryset), start=1))
         return render(request, 'generator/schemas.html', {
-            'schemas': schemas
+            'schemas': schemas,
         })
     else:
         return render(request, 'generator/login.html')
@@ -97,7 +107,7 @@ def create_schema(request):
             name=schema_name,
             delimiter=schema_delimiter,
             character=schema_character,
-            owner=request.user
+            owner=request.user,
         )
         # Get columns data from the form
         names = request.POST.getlist('name')
@@ -113,10 +123,11 @@ def create_schema(request):
                 start=starts[i],
                 end=ends[i],
                 order=orders[i],
-                owner=new_schema
+                owner=new_schema,
             )
         # Return new schema and datasets representation
-        columns = Column.objects.filter(owner=new_schema).order_by('order')
+        columns = Column.objects.filter(
+                owner=new_schema).order_by('order')
         queryset = DataSet.objects.filter(owner=new_schema)
         datasets = list(enumerate(list(queryset), start=1))
         return render(request, 'generator/datasets.html', {
@@ -126,11 +137,12 @@ def create_schema(request):
             'datasets': datasets,
         })
         # Return schemas page
-        # queryset = Schema.objects.filter(owner=request.user).order_by('-modified')
+        # queryset = Schema.objects.filter(
+        #         owner=request.user).order_by('-modified')
         # schemas = list(enumerate(list(queryset), start=1))
         # return render(request, 'generator/schemas.html', {
         #     'schemas': schemas,
-        #     'message': 'New schema successfully created!'
+        #     'message': 'New schema successfully created!',
         # })
     else:
         columns = [(1, {'start': 0, 'end': 0})]
@@ -145,7 +157,8 @@ def update_schema(request):
         # Show prepopulated form with schema data
         schema_id = request.GET.get('schema_id')
         schema = Schema.objects.get(pk=schema_id)
-        queryset = Column.objects.filter(owner=schema_id).order_by('order')
+        queryset = Column.objects.filter(
+                owner=schema_id).order_by('order')
         columns = list(enumerate(list(queryset), start=1))
         return render(request, 'generator/schema.html', {
             'schema': schema,
@@ -175,10 +188,11 @@ def update_schema(request):
                 start=starts[i],
                 end=ends[i],
                 order=orders[i],
-                owner=schema
+                owner=schema,
             )
         # Return updated schema and datasets representation
-        columns = Column.objects.filter(owner=schema_id).order_by('order')
+        columns = Column.objects.filter(
+                owner=schema_id).order_by('order')
         queryset = DataSet.objects.filter(owner=schema)
         datasets = list(enumerate(list(queryset), start=1))
         return render(request, 'generator/datasets.html', {
@@ -188,11 +202,12 @@ def update_schema(request):
             'datasets': datasets,
         })
         # Return schemas page
-        # queryset = Schema.objects.filter(owner=request.user).order_by('-modified')
+        # queryset = Schema.objects.filter(
+        #         owner=request.user).order_by('-modified')
         # schemas = list(enumerate(list(queryset), start=1))
         # return render(request, 'generator/schemas.html', {
         #     'schemas': schemas,
-        #     'message': 'Schema successfully updated!'
+        #     'message': 'Schema successfully updated!',
         # })
 
 
@@ -224,7 +239,8 @@ def create_fake_data(rows_number, columns):
         row = {}
         for column in columns:
             if column.type == 'pyint' or column.type == 'paragraph':
-                row[column.name] = get_faker_method(column.type, int(column.start), int(column.end))
+                row[column.name] = get_faker_method(
+                        column.type, int(column.start), int(column.end))
             else:
                 row[column.name] = get_faker_method(column.type)
         rows.append(row)
@@ -235,8 +251,12 @@ def create_csv_file(file, rows, schema, columns):
     # Create csv file with fake data records
     with open(file, 'w', newline='') as csvfile:
         fieldnames = [column.name for column in columns]
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=schema.delimiter,
-                            quotechar=schema.character)
+        writer = csv.DictWriter(
+                csvfile, 
+                fieldnames=fieldnames, 
+                delimiter=schema.delimiter, 
+                quotechar=schema.character,
+                )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -267,10 +287,10 @@ def create_dataset(request):
         with open(dataset_name, 'a+') as f:
             dataset_file = File(f, name=dataset_name)
             new_dataset = DataSet.objects.create(
-                name = dataset_name,
-                file = dataset_file,
-                owner = schema
-            )
+                    name = dataset_name,
+                    file = dataset_file,
+                    owner = schema,
+                    )
         os.remove(dataset_name)
         # Generate data and record into the dataset file
         rows = create_fake_data(rows_number, columns)
@@ -281,5 +301,6 @@ def create_dataset(request):
         created = new_dataset.created.strftime('%Y-%m-%d %H:%M:%S')
         return JsonResponse({
             'url': url,
-            'created': created})
+            'created': created,
+            })
 
